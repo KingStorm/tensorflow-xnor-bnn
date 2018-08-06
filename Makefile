@@ -1,3 +1,5 @@
+GPUCFLAGS = -c -gencode=arch=compute_30,code=sm_30
+
 all:
 	nvcc -std=c++11 -c -o obj/xnor_gemm_kernel.cu.o src/xnor_gemm_kernel.cu.cc -I ${TF_INC} -D GOOGLE_CUDA=1 -x cu -Xcompiler -fPIC --expt-relaxed-constexpr --Wno-deprecated-gpu-targets
 	nvcc -std=c++11 -c -o obj/base_gemm_kernel.cu.o src/base_gemm_kernel.cu.cc -I ${TF_INC} -D GOOGLE_CUDA=1 -x cu -Xcompiler -fPIC --expt-relaxed-constexpr --Wno-deprecated-gpu-targets

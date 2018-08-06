@@ -1,5 +1,5 @@
 import tensorflow as tf
-from gemm_op import xnor_gemm
+from tf_gemm_op import xnor_gemm
 
 
 class GemmTest(tf.test.TestCase):

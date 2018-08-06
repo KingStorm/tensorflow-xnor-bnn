@@ -1,7 +1,7 @@
 import time
 import numpy as np
 import tensorflow as tf
-from gemm_op import xnor_gemm
+from tf_gemm_op import xnor_gemm
 
 N = 4096
 N_RUNS = 5
