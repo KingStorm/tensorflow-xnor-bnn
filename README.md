@@ -1,3 +1,8 @@
+# NOTE
+Basically this is a repo forked from https://github.com/AngusG/tensorflow-xnor-bnn.
+But want try different tasks: 
+-[] voice activity detection. 
+
 # tensorflow-xnor-bnn
 BinaryNets in TensorFlow with XNOR GEMM op
 
