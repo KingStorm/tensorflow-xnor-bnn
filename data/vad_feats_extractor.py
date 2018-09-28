@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 import os
 import soundfile as sf
+from sklearn.preprocessing import MinMaxScaler
 
 """
 INPUT:
@@ -58,11 +59,11 @@ class Feature_Extractor(object):
         if label_ext != ".mat":
             raise ValueError("label_ext %s does not support" % label_ext)
         if not os.path.exists(os.path.join(self.output_dir, "train")):
-            os.mkdirs(os.path.join(self.output_dir, "train"))
+            os.mkdir(os.path.join(self.output_dir, "train"))
         if not os.path.exists(os.path.join(self.output_dir, "valid")):
-            os.mkdirs(os.path.join(self.output_dir, "valid"))
+            os.mkdir(os.path.join(self.output_dir, "valid"))
         if not os.path.exists(os.path.join(self.output_dir, "test")):
-            os.mkdirs(os.path.join(self.output_dir, "test"))
+            os.mkdir(os.path.join(self.output_dir, "test"))
 
         wav_list = os.listdir(self.input_dir)
         wav_list = [fn for fn in wav_list if fn.endswith(".wav")]
@@ -135,18 +136,34 @@ class Feature_Extractor(object):
             print("label final shape: %s", str(labels_frm.shape))
             print("feature final shape: %s", str(feature.shape))
 
+            # ==============================================
+            # Min-Max normalziation using sklearn to (0, 1)
+            # ==============================================
+            minmax_scaler = MinMaxScaler()
+            # default fit data: [n_samples, n_features]
+            minmax_scaler.fit(feature)
+            feature = minmax_scaler.transform(feature)
+
             # ====================
             #      Dump
             # ===================
             basename = wav_nm.split(".")[0]
+
+            # Dump min and max values.
+            minmax_meta = np.concatenate([minmax_scaler.data_min_.reshape((1, -1)),
+                                           minmax_scaler.data_max_.reshape((1, -1))], axis=0)
+            np.save(os.path.join(self.output_dir, "minmax_meta.npy"), minmax_meta)
+
             # Split to train, vad, test dirs and do dump.
             len_data = len(feature)
-            feature_valid = feature[:self.valid_percent * len_data, :]
-            feature_test = feature[-self.test_percent: * len_data, :]
-            feature_train = feature[self.valid_percent:-self.test_percent:, :]
-            labels_frm_valid = labels_frm[:self.valid_percent * len_data, :]
-            labels_frm_test = labels_frm[-self.test_percent: * len_data, :]
-            labels_frm_train = labels_frm[self.valid_percent:-self.test_percent:, :]
+            valid_len = int(self.valid_percent * len_data)
+            test_len = int(self.test_percent * len_data)
+            feature_valid = feature[:valid_len, :]
+            feature_test = feature[-test_len:, :]
+            feature_train = feature[valid_len:-test_len, :]
+            labels_frm_valid = labels_frm[:valid_len, :]
+            labels_frm_test = labels_frm[-test_len:, :]
+            labels_frm_train = labels_frm[valid_len:-test_len, :]
             np.save(os.path.join(self.output_dir, "train", basename+".mfcc_vadtype1.npy"), feature_train)
             np.save(os.path.join(self.output_dir, "train", basename+".label.npy"), labels_frm_train)
             np.save(os.path.join(self.output_dir, "valid", basename+".mfcc_vadtype1.npy"), feature_valid)
@@ -162,7 +179,12 @@ if __name__ == "__main__":
                         help='input raw data dir, containing wav. and mat (basically matlab format to hold the labels.')
     parser.add_argument('--out_data_dir',
                         help='aligned inoput and output feats in numpy format with same basename.')
+    parser.add_argument('--valid_percent', type=float, default=0.1,
+                        help='e.g,. 0.05 => 5%')
+    parser.add_argument('--test_percent', type=float, default=0.05,
+                        help='e.g,. 0.05 => 5%')
     args = parser.parse_args()
    
-    feat_ext = Feature_Extractor(input_dir=args.in_raw_dir, output_dir=args.out_data_dir)
+    feat_ext = Feature_Extractor(input_dir=args.in_raw_dir, output_dir=args.out_data_dir,
+                                 valid_percent=args.valid_percent, test_percent=args.test_percent)
     feat_ext.extract_vad_type1_features()
