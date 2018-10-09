@@ -11,7 +11,9 @@ def quantize_grad(op, grad):
 
 class BinaryNet:
 
-    def __init__(self, binary, first, last, xnor, n_hidden, keep_prob, x, batch_norm, phase):
+    def __init__(self, binary, first, last, xnor, n_hidden, keep_prob, x, batch_norm, phase, out_dim, in_dim):
+        self.out_dim = out_dim
+        self.in_dim = in_dim
         self.binary = binary
         self.xnor = xnor
         self.n_hidden = n_hidden
@@ -45,7 +47,7 @@ class BinaryNet:
 
             with tf.name_scope('fc1_b') as scope:
 
-                W_1 = self.init_layer('W_1', 784, self.n_hidden)
+                W_1 = self.init_layer('W_1', self.in_dim, self.n_hidden)
                 self.w1_summ = tf.summary.histogram(name='W1_summ', values=W_1)
 
                 # optionally quantize weights in first layer
@@ -124,7 +126,7 @@ class BinaryNet:
 
             with tf.name_scope('fcout_b') as scope:
 
-                W_out = self.init_layer('W_out', self.n_hidden, 10)
+                W_out = self.init_layer('W_out', self.n_hidden, out_dim)
                 self.wout_summ = tf.summary.histogram(
                     name='Wout_summ', values=W_out)
 
@@ -149,10 +151,9 @@ class BinaryNet:
                     name='aout_summ', values=self.output)
         # fp32 net                
         else:
-
             with tf.name_scope('fc1_fp') as scope:
 
-                W_1 = self.init_layer('W_1', 784, self.n_hidden)
+                W_1 = self.init_layer('W_1', self.in_dim, self.n_hidden)
                 self.w1_summ = tf.summary.histogram(name='W1_summ', values=W_1)
                 fc1 = tf.matmul(self.input, W_1)
                 if batch_norm:
@@ -188,7 +189,7 @@ class BinaryNet:
 
             with tf.name_scope('fcout_fp') as scope:
 
-                W_out = self.init_layer('W_out', self.n_hidden, 10)
+                W_out = self.init_layer('W_out', self.n_hidden, self.out_dim)
                 self.wout_summ = tf.summary.histogram(
                     name='Wout_summ', values=W_out)
                 self.output = tf.matmul(fc3, W_out)

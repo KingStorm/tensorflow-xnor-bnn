@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import random
+import argparse
 random.seed(1234)
 
 """
@@ -19,9 +20,8 @@ class Vad_Data_Provider():
                  batch_size=512):
         """Data Provider for VAD data.
         Very old style but easy to implement and verify a quick experiment.
-        TODO: to support RNN
 
-        :param data_dir:  this could be either the training set dir,
+        :param data_dir:  this could be either the training set di,
                           the valid set dir, or the test set dir.
         :param set_name: 
         :param label_ext: 
@@ -30,6 +30,7 @@ class Vad_Data_Provider():
         :rtype: 
 
         """
+        self.output_dim = 2
         self.data_dir = data_dir
         self.label_ext = label_ext
         self.feats_ext = feats_ext
@@ -46,22 +47,23 @@ class Vad_Data_Provider():
         else:
             self.feats_fn_list = [fn for fn in file_list if set_name in fn]
             self.label_fn_list = [fn for fn in file_list if set_name in fn]
-        print("----Start init Data----")
-        print("feats_fn_list: %s" % str(feats_fn_list))
-        print("label_fn_list: %s" % str(label_fn_list))
+        print("----Start init Data (%s)----" % self.data_dir)
+        print("feats_fn_list: %s" % str(self.feats_fn_list))
+        print("label_fn_list: %s" % str(self.label_fn_list))
 
         # Load data and to rnn or dnn.
         # rnn format: [?, fix_seq_len, dim]
         # dnn format: [?, dim]
         self.feats = []
         self.labels = []
-        for fn_feats, fn_label in zip(feats_fn_list, label_fn_list):
+        for fn_feats, fn_label in zip(self.feats_fn_list, self.label_fn_list):
             feats_data = np.load(os.path.join(data_dir, fn_feats))
             label_data = np.load(os.path.join(data_dir, fn_label))
+            label_data = np.array(label_data, dtype=np.int32)
             if self.return_sequences:
                 feat_data, label_data = self._feats_label_to_seq(feats_data, label_data)
-            self.feats.append(feat)
-            self.labels.append(label)
+            self.feats.append(feats_data)
+            self.labels.append(label_data)
         self.feats = np.concatenate(self.feats)
         self.labels = np.concatenate(self.labels)
 
@@ -95,19 +97,41 @@ class Vad_Data_Provider():
     def get_batch(self):
         # The last batch.
         if self.idx+self.batch_size > self.total_sample_nb:
-            self._shuffle_data()
             feat = self.feats[-self.batch_size:]
             label = self.labels[-self.batch_size:]
+            self._shuffle_data()
             self.idx = 0
             self.epoch += 1
         # Normal batch iterations.
         else:
-            feat = self.feats[self.idxes[idx: idx+self.batch_size]]
-            label = self.labels[self.idxes[idx: idx+self.batch_size]]
+            feat = self.feats[self.idxes[self.idx: self.idx+self.batch_size]]
+            label = self.labels[self.idxes[self.idx: self.idx+self.batch_size]]
             self.idx += self.batch_size
 
         return feat, label
 
     def _shuffle_data(self):
         random.shuffle(self.idxes)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser("Data provider for for data set: https://github.com/jtkim-kaist/VAD")
+    parser.add_argument('--train_dir', type=str, default="/home/kingstorm/dataset/vad_3rd_train_test/train",
+                        help='dir holding training set.')
+    parser.add_argument('--valid_dir', type=str, default="/home/kingstorm/dataset/vad_3rd_train_test/valid",
+                        help='dir holding validation set.')
+    parser.add_argument('--test_dir', type=str, default="/home/kingstorm/dataset/vad_3rd_train_test/test",
+                        help='dir holding test set.')
+    args = parser.parse_args()
+
+    vad_train_provider = Vad_Data_Provider(data_dir=args.train_dir)
+    vad_valid_provider = Vad_Data_Provider(data_dir=args.valid_dir)
+    vad_test_provider = Vad_Data_Provider(data_dir=args.test_dir)
+
+    import pdb
+    pdb.set_trace()
+    iterations = 10000
+    for itr in np.arange(iterations):
+        temp_train = vad_train_provider.get_batch()
+        temp_valid = vad_valid_provider.get_batch()
+        temp_test = vad_test_provider.get_batch()
 
