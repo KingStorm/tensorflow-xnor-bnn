@@ -93,7 +93,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--batch_size', help='examples per mini-batch', type=int, default=128)
     parser.add_argument(
-        '--max_steps', help='maximum training steps', type=int, default=100000)
+        '--max_steps', help='maximum training steps', type=int, default=1000000)
     parser.add_argument(
         '--gpu', help='physical id of GPUs to use')
     parser.add_argument(
@@ -122,9 +122,10 @@ if __name__ == '__main__':
     # import data
     #mnist = input_data.read_data_sets(
     #    args.data_dir, dtype=tf.float32, one_hot=True)
-    vad_train_provider = Vad_Data_Provider(data_dir="/home/kingstorm/dataset/vad_3rd_train_test/train")
-    vad_valid_provider = Vad_Data_Provider(data_dir="/home/kingstorm/dataset/vad_3rd_train_test/valid")
-    vad_test_provider = Vad_Data_Provider(data_dir="/home/kingstorm/dataset/vad_3rd_train_test/test")
+    vad_train_provider = Vad_Data_Provider(data_dir="/home/kingstorm/dataset/vad_3rd_train_test/train", set_name="room")
+    # TODO: There is a problem with valid/test sets, now just use test set
+    vad_valid_provider = Vad_Data_Provider(data_dir="/home/kingstorm/dataset/vad_3rd_train_test/test", set_name="room")
+    vad_test_provider = Vad_Data_Provider(data_dir="/home/kingstorm/dataset/vad_3rd_train_test/test", set_name="room")
     dtype = tf.float32
 
     with tf.Graph().as_default():

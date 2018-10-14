@@ -6,6 +6,8 @@ random.seed(1234)
 
 """
 Very old style but easy to implement and verify a quick experiment.
+
+Data provider for for data set: https://github.com/jtkim-kaist/VAD
 """
 
 
@@ -37,6 +39,8 @@ class Vad_Data_Provider():
         self.return_sequences = return_sequences
         self.seq_len = seq_len
         self.batch_size = batch_size
+        if return_sequences:
+            raise NotImplementedError("Currently RNN data shuffle not supported, Please implement it!!! Now the data points have no time correlations to each other, just independently and identically shuffled.")
 
         # use all data or a specific category?
         file_list = os.listdir(self.data_dir)
@@ -45,8 +49,8 @@ class Vad_Data_Provider():
         if not set_name:
             pass
         else:
-            self.feats_fn_list = [fn for fn in file_list if set_name in fn]
-            self.label_fn_list = [fn for fn in file_list if set_name in fn]
+            self.feats_fn_list = [fn for fn in file_list if set_name in fn and fn.endswith(self.feats_ext)]
+            self.label_fn_list = [fn for fn in file_list if set_name in fn and fn.endswith(self.label_ext)]
         print("----Start init Data (%s)----" % self.data_dir)
         print("feats_fn_list: %s" % str(self.feats_fn_list))
         print("label_fn_list: %s" % str(self.label_fn_list))
@@ -123,9 +127,9 @@ if __name__ == "__main__":
                         help='dir holding test set.')
     args = parser.parse_args()
 
-    vad_train_provider = Vad_Data_Provider(data_dir=args.train_dir)
-    vad_valid_provider = Vad_Data_Provider(data_dir=args.valid_dir)
-    vad_test_provider = Vad_Data_Provider(data_dir=args.test_dir)
+    vad_train_provider = Vad_Data_Provider(data_dir=args.train_dir, set_name="room")
+    vad_valid_provider = Vad_Data_Provider(data_dir=args.valid_dir, set_name="room")
+    vad_test_provider = Vad_Data_Provider(data_dir=args.test_dir, set_name="room")
 
     import pdb
     pdb.set_trace()

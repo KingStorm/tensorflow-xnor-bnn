@@ -126,7 +126,7 @@ class BinaryNet:
 
             with tf.name_scope('fcout_b') as scope:
 
-                W_out = self.init_layer('W_out', self.n_hidden, out_dim)
+                W_out = self.init_layer('W_out', self.n_hidden, self.out_dim)
                 self.wout_summ = tf.summary.histogram(
                     name='Wout_summ', values=W_out)
 

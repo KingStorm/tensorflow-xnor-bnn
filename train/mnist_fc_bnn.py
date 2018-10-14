@@ -70,8 +70,6 @@ if __name__ == '__main__':
     log_path, binary, first, last, xnor, batch_norm = handle_args(args)
 
     # import data
-    import pdb
-    pdb.set_trace()
     mnist = input_data.read_data_sets(
         args.data_dir, dtype=tf.float32, one_hot=True)
     dtype = tf.float32
