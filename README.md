@@ -3,6 +3,11 @@ Basically this is a repo forked from https://github.com/AngusG/tensorflow-xnor-b
 But want try different tasks: 
 -[] voice activity detection. 
 
+# task: VAD
+1. Download data from https://github.com/jtkim-kaist/VAD
+2. Use `vad_feats_extractor.py` (see help) to extract MFCC-based feats.
+3. Run `vad_fc_bnn.py` (see help, there are float/binary options)
+
 # tensorflow-xnor-bnn
 BinaryNets in TensorFlow with XNOR GEMM op
 
